@@ -1,4 +1,4 @@
-# 🤖 Twin AI — Your AI-Powered Digital Resume
+# 🤖Digital Portfolio AI — Your AI-Powered Digital Resume
 
 > Instead of a static resume, give visitors a chatbot that *knows you* — your career history, skills, and personality. Recruiters and managers can have real conversations with your digital twin.
 
@@ -26,7 +26,7 @@ Twin AI is a full-stack serverless application that replaces your resume with an
 
 - **Frontend**: Next.js static site hosted on S3 + CloudFront
 - **Backend**: FastAPI running on AWS Lambda via Mangum
-- **AI**: Groq (LLaMA 3.3) for fast, intelligent responses
+- **AI**: AWS Bedrock (Amazon Nova Lite) for intelligent responses
 - **Memory**: S3 for persistent conversation history
 - **API**: AWS API Gateway (HTTP API)
 
@@ -117,12 +117,22 @@ This is the main personality file. Write it in first person as if you're briefin
 
 Create `backend/.env`:
 ```env
-GROQ_API_KEY=your_groq_api_key
+DEFAULT_AWS_REGION=us-east-1
+BEDROCK_MODEL_ID=global.amazon.nova-lite-v1:0
 CORS_ORIGINS=http://localhost:3000
 USE_S3=false
 ```
 
-Get your free Groq API key at [console.groq.com](https://console.groq.com).
+> **Note**: AWS Bedrock uses your AWS credentials directly — no separate API key needed. Make sure your AWS CLI is configured with `aws configure`.
+
+### Enable Bedrock Model Access
+
+Before running locally or deploying, you must request access to the Bedrock model:
+
+1. Go to **AWS Console → Bedrock → Model access**
+2. Click **Manage model access**
+3. Enable **Amazon Nova Lite** (or your chosen model)
+4. Click **Save changes** — access is usually granted within a few minutes
 
 ### Run Backend
 
@@ -155,7 +165,7 @@ Frontend runs at `http://localhost:3000`.
 ### 3.1 Create S3 Memory Bucket
 
 Go to **S3 → Create bucket**:
-- Bucket name: `twin-memory` (or your preferred name, no spaces)
+- Bucket name: `twin-memory` (or your preferred name, **no spaces**)
 - Region: your preferred region
 - Keep all other defaults
 - Click **Create bucket**
@@ -186,10 +196,11 @@ Go to **Lambda → Configuration → Environment variables → Edit**:
 
 | Key | Value |
 |-----|-------|
-| `GROQ_API_KEY` | your Groq API key |
+| `DEFAULT_AWS_REGION` | `us-east-1` (or your region) |
+| `BEDROCK_MODEL_ID` | `global.amazon.nova-lite-v1:0` |
 | `CORS_ORIGINS` | `*` (update to CloudFront URL later) |
 | `USE_S3` | `true` |
-| `S3_BUCKET` | `twin-memory` (your bucket name, no spaces!) |
+| `S3_BUCKET` | `twin-memory` (**no spaces!**) |
 
 ### 3.5 Configure Lambda Handler and Timeout
 
@@ -198,7 +209,7 @@ Go to **Lambda → Configuration → Environment variables → Edit**:
 - Set **Timeout** to: `30 seconds`
 - Click **Save**
 
-### 3.6 Add S3 Permissions to Lambda Role
+### 3.6 Add Permissions to Lambda Role
 
 Go to **IAM → Roles → your-lambda-role → Add permissions → Create inline policy**:
 
@@ -218,10 +229,20 @@ Go to **IAM → Roles → your-lambda-role → Add permissions → Create inline
         "arn:aws:s3:::twin-memory",
         "arn:aws:s3:::twin-memory/*"
       ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream"
+      ],
+      "Resource": "*"
     }
   ]
 }
 ```
+
+> **Important**: Lambda needs both S3 permissions (for memory) and Bedrock permissions (to call the AI model).
 
 ### 3.7 Test Lambda
 
@@ -383,7 +404,7 @@ Go to **CloudFront → Create distribution**:
 - Choose origin: **Other** (NOT Amazon S3)
 - Origin domain: paste your S3 website endpoint **without** `http://`
   - Example: `twin-frontend.s3-website-us-east-1.amazonaws.com`
-- Origin protocol: **HTTP only** ← Critical! S3 static hosting doesn't support HTTPS
+- Origin protocol: **HTTP only** ← Critical! S3 static hosting does not support HTTPS
 
 **Cache behavior:**
 - Viewer protocol policy: **Redirect HTTP to HTTPS**
@@ -439,9 +460,11 @@ Go to **CloudWatch → Log groups → /aws/lambda/portfolio-ai-bot** to debug an
 | Error | Cause | Fix |
 |-------|-------|-----|
 | `Handler 'lambda_handler' missing` | Wrong handler config | Set handler to `lambda_handler.lambda_handler` |
-| `Method Not Allowed` on `/chat` | Hitting GET in browser | Use POST — this is normal browser behavior |
+| `Method Not Allowed` on `/chat` | Hitting GET in browser | Use POST — this is expected browser behavior |
 | `Failed to fetch` in browser | CORS not configured | Configure CORS in API Gateway and set `CORS_ORIGINS` in Lambda |
 | `AccessDenied on S3` | Missing IAM permissions | Add S3 inline policy to Lambda role |
+| `AccessDenied on Bedrock` | Missing Bedrock permissions | Add `bedrock:InvokeModel` to Lambda role policy |
+| `Model not available` | Bedrock model access not enabled | Enable model access in **Bedrock → Model access** |
 | `Invalid bucket name` | Trailing space in env var | Check `S3_BUCKET` env var for trailing spaces |
 | `sourceIp KeyError` | Incomplete test event | Add `sourceIp` and `userAgent` to test event's `requestContext.http` |
 | CloudFront 504 errors | Wrong origin protocol | Set origin protocol to **HTTP only** in CloudFront |
@@ -453,7 +476,9 @@ Go to **CloudWatch → Log groups → /aws/lambda/portfolio-ai-bot** to debug an
 ```
 Browser → CloudFront → S3 (static frontend)
                 ↓
-Browser → API Gateway → Lambda (FastAPI + Groq)
+Browser → API Gateway → Lambda (FastAPI + Mangum)
+                              ↓
+                        AWS Bedrock (Nova Lite)
                               ↓
                            S3 (conversation memory)
 ```
