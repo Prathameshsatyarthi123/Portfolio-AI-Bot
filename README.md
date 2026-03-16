@@ -485,6 +485,3 @@ Browser → API Gateway → Lambda (FastAPI + Mangum)
 
 ---
 
-## License
-
-MIT
