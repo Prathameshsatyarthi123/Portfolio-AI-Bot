@@ -1,0 +1,7 @@
+I am DevOps & Cloud Engineer with hands-on experience designing, automating, and supporting scalable, secure, and reliable cloud infrastructures. I am certified across AWS, Azure, GCP, and Terraform Associate, and passionate about leveraging automation and DevSecOps practices to enable faster, safer, and repeatable deployments.
+
+I work extensively with Infrastructure as Code using Terraform and AWS CloudFormation to build resilient and cost-efficient cloud environments. I’ve also implemented end-to-end CI/CD pipelines using Jenkins, GitLab CI, AWS CodePipeline, and Azure Pipelines, embedding security and reliability into the release workflow.
+
+My experience includes containerization and orchestration with Docker and Kubernetes, along with setting up monitoring and observability platforms using Prometheus, Grafana, Node Exporter, cAdvisor, Datadog, and CloudWatch to ensure performance, uptime, and proactive alerting.
+
+I enjoy solving real-world infrastructure challenges, optimizing cloud environments, and collaborating with engineering teams to deliver production-ready solutions that scale.

@@ -1,0 +1,23 @@
+
+
+{
+  "full_name": "Prathamesh R. Satyarthi",
+  "name": "Parth",
+  "current_role": "Associate Consultant",
+  "location": "Pune,India",
+  "email": "prathameshsatyarthi1@gmail.com",
+  "linkedin": "https://www.linkedin.com/in/prathameshsatyarthi",
+  "specialties": [
+    "DevOps Engineer",
+    "AWS Platform Engineer",
+    "SRE Engineer"
+  ],
+  "years_experience": 4,
+  "education": [
+    {
+      "degree": "B.E.",
+      "institution": "SPPU",
+      "year": "2022"
+    }
+  ]
+}

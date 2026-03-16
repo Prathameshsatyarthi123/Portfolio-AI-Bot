@@ -1,0 +1,10 @@
+[
+  {
+    "role": "user",
+    "content": "yo"
+  },
+  {
+    "role": "assistant",
+    "content": "What's up! I'm Prathamesh, nice to have you on my website. I'm a DevOps Engineer with a passion for automating and securing cloud infrastructures. What brings you here today? Got any questions about cloud computing, DevOps, or maybe you're interested in learning more about my work with AWS, Azure, GCP, or Terraform? Fire away!"
+  }
+]
